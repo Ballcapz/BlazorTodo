@@ -1,0 +1,40 @@
+﻿@page "/Edit/{Id:guid}"
+@using BlazorTodo.Data
+
+@inject ITodoRepository _todoRepository
+@inject NavigationManager NavManager
+
+<h3>Edit a Todo: @todo.Description</h3>
+
+<form class="form-inline">
+    <input type="text" @bind="todo.Description" placeholder="Description" id="Description" class="form-control">
+    <button type="submit" @onclick="HandleEditTodo" class="btn btn-primary"><i class="fa fa-floppy-o" aria-hidden="true"></i></button>
+</form>
+
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; }
+
+    private Todo todo = new Todo();
+
+    protected override async Task OnInitializedAsync()
+    {
+        todo = await _todoRepository.Find(Id);
+    }
+
+    private async void HandleEditTodo()
+    {
+        await _todoRepository.Update(todo);
+
+        NavManager.NavigateTo("/", true);
+    }
+
+}
+
+<style>
+    #Description {
+        width: 400px;
+    }
+
+</style>

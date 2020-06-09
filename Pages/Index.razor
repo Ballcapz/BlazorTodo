@@ -1,0 +1,87 @@
+﻿@page "/"
+@using BlazorTodo.Data
+@inject ITodoRepository _todoRepository
+@inject NavigationManager NavManager
+
+<h1>Todo List</h1>
+<h4>Add a todo</h4>
+
+<form class="form-inline">
+    
+    <input id="Description" @bind="newTodo" />
+    
+    <button @onclick="HandleAddSubmit" type="submit"><i class="fa fa-plus" aria-hidden="true"></i> Add </button>
+</form>
+
+
+@if (!Todos.Any())
+{
+    <p class="empty">The list is empty</p>
+}
+else
+{
+    <ul class="list-unstyled">
+        @foreach (var todo in Todos)
+        {
+        <li>
+            <EditForm Model="todo" style="display: inline" OnValidSubmit="() => RemoveTodo(todo)">
+                <input type="hidden" name="Id" value="@todo.Id">
+                <button type="submit" class="btn btn-link"><i class="fa fa-trash" aria-hidden="true"></i></button>
+            </EditForm>
+            <EditForm Model="todo" style="display: inline" OnValidSubmit="() => EditTodo(todo)">
+                <input type="hidden" name="Id" value="@todo.Id">
+                <button type="submit" class="btn btn-link"><i class="fa fa-pencil-square-o" aria-hidden="true"></i></button>
+            </EditForm>
+            @todo.Description
+        </li>
+        }
+    </ul>
+}
+
+
+@code
+{
+
+    private IEnumerable<Todo> Todos = new List<Todo>();
+
+    string newTodo;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Todos = await _todoRepository.GetAll();
+    }
+
+    private async void HandleAddSubmit()
+    {
+        await _todoRepository.Add(new Todo() {Description = newTodo});
+        newTodo = "";
+        Todos = await _todoRepository.GetAll();
+    }
+
+    private async void RemoveTodo(Todo todo)
+    {
+        await _todoRepository.Remove(todo.Id);
+    }
+
+    private async void EditTodo(Todo todo)
+    {
+        if ((await _todoRepository.Find(todo.Id) != null))
+        {
+            NavManager.NavigateTo($"/Edit/{todo.Id}");
+        }
+    }
+
+}
+
+<style>
+    .validation-summary-errors ul {
+        list-style-type: none;
+        color: red;
+        padding: 0;
+        margin: 0;
+    }
+
+    .empty {
+        color: lightgray;
+    }
+</style>
